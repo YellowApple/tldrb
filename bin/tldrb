@@ -3,16 +3,16 @@
 require 'bales'
 require 'rest-client'
 
-module Tldr; end
+module Tldrb; end
 
-module Tldr::Functions
+module Tldrb::Functions
   def get_page(query, platform)
     url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
           "#{platform}/#{query}.md"
     response = RestClient.get url
 
     response.to_str
-  rescue
+  rescue RestClient::Exception
     nil
   end
 
@@ -30,7 +30,7 @@ module Tldr::Functions
   end
 end
 
-class Tldr::Application < Bales::Application
+class Tldrb::Application < Bales::Application
   version "0.0.1"
   summary "tldr client in Ruby"
   description "Ruby client for tldr " \
@@ -46,15 +46,23 @@ class Tldr::Application < Bales::Application
          description: "Override the operating system [linux, osx, sunos]"
 
   action do |query, platform: nil|
-    extend Tldr::Functions
+    unless query.class == String
+      Tldrb::Command::Help.run
+      return
+    end
+    extend Tldrb::Functions
 
     platform = my_platform if platform.nil?
 
     result = get_page query, platform
     result = get_page query, 'common' if result.nil?
 
-    # TODO: markdown formatting
-    puts result
+    if result.nil?
+      puts "Couldn't find a tldr for '#{query}'."
+    else
+      # TODO: markdown formatting
+      puts result
+    end
   end
 
   parse_and_run
