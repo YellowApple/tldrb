@@ -1,8 +1,7 @@
 # tldrb
 
 > Ruby client for [tldr](https://github.com/tldr-pages/tldr), built
-  with [Ruby on Bales](https://github.com/YellowApple/bales).
-  MIT-licensed.
+> with [Ruby on Bales](https://github.com/YellowApple/bales).
 
 - Install
 
