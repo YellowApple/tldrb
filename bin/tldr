@@ -1,0 +1,60 @@
+#!/usr/bin/env ruby
+
+require 'bales'
+require 'rest-client'
+
+module Tldr
+  class Application < Bales::Application
+    version "0.0.1"
+    summary "tldr client in Ruby"
+    description "Ruby client for tldr " \
+                "(<https://github.com/tldr-pages/tldr>).  Implemented with " \
+                "the Ruby on Bales command-line app framework " \
+                "(<https://github.com/YellowApple/bales>)."
+
+    # TODO: implement opt value checking in Bales
+    option :platform,
+           short_form: '-o',
+           long_form: '--os',
+           type: String,
+           description: "Override the operating system [linux, osx, sunos]"
+
+    action do |query, platform: nil|
+      extend Tldr::Functions
+
+      platform = my_platform if platform.nil?
+
+      result = get_page query, platform
+      result = get_page query, 'common' if result.nil?
+
+      # TODO: markdown formatting
+      puts result
+    end
+  end
+
+  module Functions
+    def get_page(query, platform)
+      response = RestClient.get "https://raw.github.com/tldr-pages/" \
+                                "tldr-pages/tldr/master/pages/" \
+                                "#{platform}/#{query}.md"
+      if response.code != 200
+        nil
+      else
+        response.to_str
+      end
+    end
+
+    def my_platform
+      platform = Gem::Platform.local.os
+      # TODO: suggest upstream use of "darwin" instead of "osx", since
+      # "darwin" is what is actually used by OS X internally"
+      platform = 'osx' if platform == 'darwin'
+      return platform
+    end
+
+    def supported_platforms
+      # TODO: check for supported platforms dynamically
+      ['linux', 'osx', 'sunos']
+    end
+  end
+end
