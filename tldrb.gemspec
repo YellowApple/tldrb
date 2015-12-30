@@ -11,7 +11,7 @@ Gem::Specification.new do |gem|
   gem.email = ['rnorthrup@newleaders.com']
   gem.files = ['bin/tldrb', 'README.md', 'COPYING']
   gem.add_runtime_dependency 'bales', '~> 0.0', '>= 0.1.2'
-  gem.add_runtime_dependency 'rest-client', '~> 1.8'
+  gem.add_development_dependency 'minitest'
   gem.executables << 'tldrb'
   gem.homepage = "https://github.com/YellowApple/tldrb"
 end

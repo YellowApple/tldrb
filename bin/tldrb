@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'bales'
-require 'rest-client'
+require 'open-uri'
 
 module Tldrb; end
 
@@ -9,10 +9,8 @@ module Tldrb::Functions
   def get_page(query, platform)
     url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
           "#{platform}/#{query}.md"
-    response = RestClient.get url
-
-    response.to_str
-  rescue RestClient::Exception
+    open(url).read
+  rescue StandardError
     nil
   end
 
