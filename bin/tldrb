@@ -65,5 +65,12 @@ class Tldrb::Application < Bales::Application
     end
   end
 
+  # TODO: implement this in Bales
+  command "version" do
+    action do
+      puts Tldrb::Application::VERSION
+    end
+  end
+
   parse_and_run
 end
