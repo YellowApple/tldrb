@@ -31,7 +31,7 @@ module Tldrb::Functions
 end
 
 class Tldrb::Application < Bales::Application
-  version "0.0.1"
+  version "0.0.3"
   summary "tldr client in Ruby"
   description "Ruby client for tldr " \
               "(<https://github.com/tldr-pages/tldr>).  Implemented with " \
