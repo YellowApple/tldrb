@@ -1,69 +1,48 @@
 #!/usr/bin/env ruby
 
-require 'bales'
-require 'rest-client'
+require 'open-uri'
+require 'optparse'
 
-module Tldrb; end
-
-module Tldrb::Functions
-  def get_page(query, platform)
-    url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
-          "#{platform}/#{query}.md"
-    response = RestClient.get url
-
-    response.to_str
-  rescue RestClient::Exception
-    nil
-  end
-
-  def my_platform
-    platform = Gem::Platform.local.os
-    # TODO: suggest upstream use of "darwin" instead of "osx", since
-    # "darwin" is what is actually used by OS X internally"
-    platform = 'osx' if platform == 'darwin'
-    return platform
-  end
-
-  def supported_platforms
-    # TODO: check for supported platforms dynamically
-    ['linux', 'osx', 'sunos']
-  end
+def get_page(query, platform)
+  url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
+        "#{platform}/#{query}.md"
+  open(url).read
+rescue StandardError
+  nil
 end
 
-class Tldrb::Application < Bales::Application
-  version "0.0.1"
-  summary "tldr client in Ruby"
-  description "Ruby client for tldr " \
-              "(<https://github.com/tldr-pages/tldr>).  Implemented with " \
-              "the Ruby on Bales command-line app framework " \
-              "(<https://github.com/YellowApple/bales>)."
+def my_platform
+  platform = Gem::Platform.local.os
+  # TODO: suggest upstream use of "darwin" instead of "osx", since
+  # "darwin" is what is actually used by OS X internally"
+  platform = 'osx' if platform == 'darwin'
+  platform
+end
 
-  # TODO: implement opt value checking in Bales
-  option :platform,
-         short_form: '-o',
-         long_form: '--os',
-         type: String,
-         description: "Override the operating system [linux, osx, sunos]"
+platform = my_platform
 
-  action do |query, platform: nil|
-    unless query.class == String
-      Tldrb::Command::Help.run
-      return
-    end
-    extend Tldrb::Functions
+help = OptionParser.new do |opts|
+  opts.banner = <<-BANNER.gsub(/^ {4}/, "")
+    Ruby client for tldr https://github.com/tldr-pages/tldr
+  BANNER
+  opts.on("-o", "--os", "Override the operating system [linux, osx, sunos]") { |o| platform = o }
+  opts.on("-h", "--help", "Show this.") { puts opts; exit }
+  opts.on("-v", "--version", "Show Version") { puts "0.0.2"; exit }
+end
+help.parse!(ARGV)
 
-    platform = my_platform if platform.nil?
+if ARGV.size != 1
+  puts help
+  exit 1
+end
 
-    result = get_page query, platform
-    result = get_page query, 'common' if result.nil?
+query = ARGV[0]
+result = get_page query, platform
+result = get_page query, 'common' unless result
 
-    if result.nil?
-      puts "Couldn't find a tldr for '#{query}'."
-    else
-      # TODO: markdown formatting
-      puts result
-    end
-  end
-
-  parse_and_run
+if result
+  # TODO: markdown formatting
+  puts result
+else
+  puts "Couldn't find a tldr for '#{query}'."
 end
