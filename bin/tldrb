@@ -2,6 +2,7 @@
 
 require 'bales'
 require 'open-uri'
+require 'colorize'
 
 module Tldrb; end
 
@@ -25,6 +26,21 @@ module Tldrb::Functions
   def supported_platforms
     # TODO: check for supported platforms dynamically
     ['linux', 'osx', 'sunos']
+  end
+
+  def parse_page(page)
+    page.each_line.map do |line|
+      case line[0]
+      when '#'
+        next
+      when '>'
+        line.gsub(/>/, ' ').colorize(:blue)
+      when '-'
+        line.colorize(:green)
+      when '`'
+        line.gsub(/`/, ' ').colorize(:cyan)
+      end
+    end.join('')
   end
 end
 
@@ -58,8 +74,7 @@ class Tldrb::Application < Bales::Application
     if result.nil?
       puts "Couldn't find a tldr for '#{query}'."
     else
-      # TODO: markdown formatting
-      puts result
+      puts parse_page(result)
     end
   end
 
