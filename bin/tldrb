@@ -3,6 +3,7 @@
 require 'bales'
 require 'open-uri'
 require 'colorize'
+require 'json'
 
 module Tldrb; end
 
@@ -24,8 +25,15 @@ module Tldrb::Functions
   end
 
   def supported_platforms
-    # TODO: check for supported platforms dynamically
-    ['linux', 'osx', 'sunos']
+    sections_url = "https://api.github.com/repos/tldr-pages/tldr" \
+      "/contents/pages/"
+    api_response = open(sections_url).read
+    pages = JSON.parse(api_response)
+
+    platforms = pages.select { |page| page['type'] == 'dir' }
+                .collect { |dirs| dirs['name'] }
+                .delete_if { |dir| dir == 'common' }
+    return platforms
   end
 
   def parse_page(page)
