@@ -123,7 +123,7 @@ class Tldrb::Application < Bales::Application
     end
   end
 
-  command '--remove_cache' do
+  command 'remove_cache' do
     action do
       extend Tldrb::Functions
       puts 'Removing cache...'
@@ -131,7 +131,7 @@ class Tldrb::Application < Bales::Application
     end
   end
 
-  command '--update' do
+  command 'update' do
     action do
       extend Tldrb::Functions
       puts 'Indexing commands...'
