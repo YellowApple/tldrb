@@ -4,16 +4,53 @@ require 'bales'
 require 'open-uri'
 require 'colorize'
 require 'json'
+require 'fileutils'
 
 module Tldrb; end
 
 module Tldrb::Functions
   def get_page(query, platform)
-    url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
-          "#{platform}/#{query}.md"
-    open(url).read
+    filepath = create_filepath(query, platform)
+    return File.open(filepath).read if File.exist?(filepath)
+    content = download_page(query, platform)
+    save_to_cache(filepath, content)
+    content
   rescue StandardError
     nil
+  end
+
+  def download_page(query, platform)
+    url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
+      "#{platform}/#{query}.md"
+    open(url).read
+  end
+
+  def cache_dir
+    folder = if ENV['XDG_CACHE_HOME']
+               ENV['XDG_CACHE_HOME']
+             else
+               File.expand_path('~/.cache')
+             end
+    folder + '/tldr'
+  end
+
+  def create_filepath(command, platform)
+    "#{cache_dir}/#{command}_#{platform}.md"
+  end
+
+  def save_to_cache(filepath, content)
+    dir = cache_dir
+    FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    file = File.new(filepath, 'w+')
+    file.puts content
+  end
+
+  def remove_cache
+    FileUtils.rm_r(cache_dir) if Dir.exist?(cache_dir)
+  end
+
+  def index_cache
+    Dir["#{cache_dir}/*.md"].map { |f| File.basename(f, '.md').split('_') }
   end
 
   def my_platform
@@ -83,6 +120,29 @@ class Tldrb::Application < Bales::Application
       puts "Couldn't find a tldr for '#{query}'."
     else
       puts parse_page(result)
+    end
+  end
+
+  command '--remove_cache' do
+    action do
+      extend Tldrb::Functions
+      puts 'Removing cache...'
+      remove_cache
+    end
+  end
+
+  command '--update' do
+    action do
+      extend Tldrb::Functions
+      puts 'Indexing commands...'
+      files = index_cache
+      puts 'Removing cache...'
+      remove_cache
+      files.each do |f|
+        p = download_page(*f)
+        puts "Downloaded man page for: #{f[0]}"
+        save_to_cache(create_filepath(*f), p)
+      end
     end
   end
 
