@@ -20,7 +20,7 @@ module Tldrb::Functions
   end
 
   def download_page(query, platform)
-    url = "https://raw.github.com/tldr-pages/tldr/master/pages/" \
+    url = "https://raw.github.com/tldr-pages/tldr/main/pages/" \
       "#{platform}/#{query}.md"
     open(url).read
   end
